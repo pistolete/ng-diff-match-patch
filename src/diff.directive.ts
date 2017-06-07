@@ -21,7 +21,7 @@ export class DiffDirective {
     var html: string;
     html = "<div>"
     for(let diff of diffs) {
-      diff[1] = diff[1].replace(/\n/g, '<br/>');
+      //diff[1] = diff[1].replace(/\n/g, '<br/>');
 
       if(diff[0] == 0) {
         html += diff[1];
