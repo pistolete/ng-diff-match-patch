@@ -1,21 +1,36 @@
-import { Directive, ElementRef, Input } from '@angular/core';
+import { Directive, ElementRef, Input, OnChanges} from '@angular/core';
 import { DiffMatchPatchService } from './diffMatchPatch.service';
 
 @Directive({
   selector: '[lineDiff]',
 })
-export class LineDiffDirective {
+export class LineDiffDirective implements OnChanges {
   @Input() left: string | number | boolean;
   @Input() right: string | number | boolean;
+  @Input() showAsHtml: boolean = true;
 
   constructor(private el: ElementRef, private dmp: DiffMatchPatchService) {  }
 
   ngOnInit () {
-    if(typeof this.left === 'number' || typeof this.left === 'boolean') this.left = this.left.toString();
-    if(typeof this.right === 'number' || typeof this.right === 'boolean') this.right = this.right.toString();
-    this.el.nativeElement.innerHTML = this.createHtml(this.dmp.getLineDiff(this.left, this.right));
+    this.makeDiff();
   }
 
+  ngOnChanges(changes) {
+    if (changes.showAsHtml !== undefined && changes.showAsHtml.currentValue !== changes.showAsHtml.previousValue) {
+      this.makeDiff();
+    }
+  }
+
+  private makeDiff() {
+    if(typeof this.left === 'number' || typeof this.left === 'boolean') this.left = this.left.toString();
+    if(typeof this.right === 'number' || typeof this.right === 'boolean') this.right = this.right.toString();
+    var diffs = this.dmp.getLineDiff(this.left, this.right);
+    var diffContent = this.createHtml(diffs);
+    if (this.showAsHtml)
+      this.el.nativeElement.innerHTML = diffContent;
+    else
+      this.el.nativeElement.innerText = diffContent;
+  }  
   // TODO: Need to fix this for line diffs
   createHtml (diffs) {
     var html: string;

@@ -1,17 +1,33 @@
-import { Directive, ElementRef, Input } from '@angular/core';
+import { Directive, ElementRef, Input, OnChanges} from '@angular/core';
 import { DiffMatchPatchService } from './diffMatchPatch.service';
 
 @Directive({
   selector: '[processingDiff]'
 })
-export class ProcessingDiffDirective { 
+export class ProcessingDiffDirective implements OnChanges { 
   @Input() left: string;
   @Input() right: string;
+  @Input() showAsHtml: boolean = true;
 
   constructor(private el: ElementRef, private dmp: DiffMatchPatchService) {  }
 
   ngOnInit () {
-    this.el.nativeElement.innerHTML = this.createHtml(this.dmp.getProcessingDiff(this.left, this.right));
+    this.makeDiff();
+  }
+  
+  ngOnChanges(changes) {
+    if (changes.showAsHtml !== undefined && changes.showAsHtml.currentValue !== changes.showAsHtml.previousValue) {
+      this.makeDiff();
+    }
+  }  
+
+  private makeDiff() {
+    var diffs = this.dmp.getProcessingDiff(this.left, this.right);
+    var diffContent = this.createHtml(diffs);
+    if (this.showAsHtml)
+      this.el.nativeElement.innerHTML = diffContent;
+    else
+      this.el.nativeElement.innerText = diffContent;
   }
 
   // TODO: Need to fix this for line diffs

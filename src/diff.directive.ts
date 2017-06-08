@@ -1,23 +1,38 @@
-import { Directive, ElementRef, Input } from '@angular/core';
+import { Directive, ElementRef, Input, OnChanges } from '@angular/core';
 import { DiffMatchPatchService } from './diffMatchPatch.service';
 
 @Directive({
   selector: '[diff]'
 })
-export class DiffDirective {
+export class DiffDirective implements OnChanges {
 
   @Input() left: string;
   @Input() right: string;
+  @Input() showAsHtml: boolean = true;
+
 
   constructor(private el: ElementRef, private dmp: DiffMatchPatchService) {  }
 
   ngOnInit () {
-    var diffs = this.dmp.getDiff(this.left, this.right);
+    this.makeDiff();
+  }
 
-    this.el.nativeElement.innerHTML = this.createHtml(this.dmp.getDiff(this.left, this.right));
+  ngOnChanges(changes) {
+    if (changes.showAsHtml !== undefined && changes.showAsHtml.currentValue !== changes.showAsHtml.previousValue) {
+      this.makeDiff();
+    }
   }
   
-  createHtml (diffs) {
+  private makeDiff() {
+    var diffs = this.dmp.getDiff(this.left, this.right);
+    var diffContent = this.createHtml(diffs);
+    if (this.showAsHtml)
+      this.el.nativeElement.innerHTML = diffContent;
+    else
+      this.el.nativeElement.innerText = diffContent;
+  }
+
+  private createHtml (diffs) {
     var html: string;
     html = "<div>"
     for(let diff of diffs) {
